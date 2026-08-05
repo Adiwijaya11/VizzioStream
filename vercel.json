@@ -14,11 +14,31 @@
                     "app/**",
                     "database/**",
                     "vendor/**",
+                    "public/build/**",
+                    "public/logo.svg",
+                    "public/favicon.ico",
+                    "public/robots.txt",
                     "artisan",
                     "composer.json",
                     "composer.lock"
                 ]
             }
+        },
+        {
+            "src": "public/build/**",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "public/logo.svg",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "public/favicon.ico",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "public/robots.txt",
+            "use": "@vercel/static"
         },
         {
             "src": "public/debug.php",
@@ -27,12 +47,28 @@
     ],
     "routes": [
         {
+            "src": "/build/(.*)",
+            "dest": "/public/build/$1"
+        },
+        {
+            "src": "/logo.svg",
+            "dest": "/public/logo.svg"
+        },
+        {
+            "src": "/favicon.ico",
+            "dest": "/public/favicon.ico"
+        },
+        {
+            "src": "/robots.txt",
+            "dest": "/public/robots.txt"
+        },
+        {
             "src": "/debug.php",
-            "dest": "public/debug.php"
+            "dest": "/public/debug.php"
         },
         {
             "src": "/(.*)",
-            "dest": "public/index.php"
+            "dest": "/public/index.php"
         }
     ]
 }

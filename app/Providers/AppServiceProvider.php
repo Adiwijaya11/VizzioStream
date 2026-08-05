@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\AnimeApiService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -23,6 +24,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Behind Vercel TLS, force https so @vite/asset/route never emit http://
+        // (browser Mixed Content blocks CSS/JS and breaks the whole UI).
+        if (! $this->app->environment('local')) {
+            URL::forceScheme('https');
+        }
+
         View::composer('layouts.navbar', function ($view) {
             /** @var \App\Services\AnimeApiService $animeService */
             $animeService = app(AnimeApiService::class);
@@ -36,7 +43,6 @@ class AppServiceProvider extends ServiceProvider
             try {
                 $genresData = Cache::remember('navbar_genres', now()->addMinutes(30), function () use ($animeService) {
                     $response = $animeService->getAllGenres();
-                    Log::info('Navbar Genres API Response', ['response_length' => count($response ?? [])]);
                     return collect($response ?? [])->map(function ($genre) {
                         return [
                             'title' => $genre['title'],
@@ -47,7 +53,6 @@ class AppServiceProvider extends ServiceProvider
 
                 $ongoingData = Cache::remember('navbar_ongoing', now()->addMinutes(30), function () use ($animeService) {
                     $response = $animeService->ongoing(1);
-                    Log::info('Navbar Ongoing API Response', ['response_length' => count($response['items'] ?? [])]);
                     return collect($response['items'] ?? [])->map(function ($anime) {
                         return [
                             'title' => $anime['title'],
@@ -58,7 +63,6 @@ class AppServiceProvider extends ServiceProvider
 
                 $completedData = Cache::remember('navbar_completed', now()->addMinutes(30), function () use ($animeService) {
                     $response = $animeService->complete(1);
-                    Log::info('Navbar Completed API Response', ['response_length' => count($response['items'] ?? [])]);
                     return collect($response['items'] ?? [])->map(function ($anime) {
                         return [
                             'title' => $anime['title'],
@@ -71,7 +75,6 @@ class AppServiceProvider extends ServiceProvider
                 // (e.g. "Summer 2026" => 2026), sorted descending.
                 $yearsData = Cache::remember('navbar_years', now()->addMinutes(60), function () use ($animeService) {
                     $seasons = $animeService->getProperties('season');
-                    Log::info('Navbar Years API Response', ['response_length' => count($seasons ?? [])]);
 
                     return collect($seasons ?? [])
                         ->map(function ($season) {
@@ -90,7 +93,6 @@ class AppServiceProvider extends ServiceProvider
                 // Real country data from kuramanime country properties (JP).
                 $countriesData = Cache::remember('navbar_countries', now()->addMinutes(60), function () use ($animeService) {
                     $countries = $animeService->getProperties('country');
-                    Log::info('Navbar Countries API Response', ['response_length' => count($countries ?? [])]);
                     $countryNames = [
                         'JP' => 'Jepang',
                         'AU' => 'Australia',
