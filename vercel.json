@@ -3,7 +3,22 @@
     "builds": [
         {
             "src": "public/index.php",
-            "use": "vercel-php@0.7.3"
+            "use": "vercel-php@0.7.3",
+            "config": {
+                "includeFiles": [
+                    "bootstrap/**",
+                    "config/**",
+                    "routes/**",
+                    "resources/**",
+                    "storage/**",
+                    "app/**",
+                    "database/**",
+                    "vendor/**",
+                    "artisan",
+                    "composer.json",
+                    "composer.lock"
+                ]
+            }
         }
     ],
     "routes": [
