@@ -14,6 +14,7 @@
                     "app/**",
                     "database/**",
                     "vendor/**",
+                    "public/build/**",
                     "artisan",
                     "composer.json",
                     "composer.lock"
