@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --breakpoint-xs: 30rem;
+}
+
+/* GSAP Floating Geometric Shapes */
+#hero-shapes .shape {
+    position: absolute;
+    will-change: transform, opacity;
+    transform-origin: center center;
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.15));
+}
+
+/* ===== Skeleton loading (pagination) ===== */
+.skeleton-grid {
+    position: relative;
+}
+.skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(100deg, #0F192E 40%, #16233f 50%, #0F192E 60%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+    0% { background-position: 120% 0; }
+    100% { background-position: -120% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer {
+        animation: none;
+    }
+}

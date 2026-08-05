@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="VizzioStream - Platform streaming film, anime, dan serial modern.">
+    <title>Laravel - Streaming Tanpa Batas</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Scripts and Styles via Vite -->
+    <script type="module" src="http://[::1]:5173/@vite/client"></script><link rel="stylesheet" href="http://[::1]:5173/resources/css/app.css" /><script type="module" src="http://[::1]:5173/resources/js/app.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.18/dist/lenis.css">
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+    <style>
+        html.lenis, html.lenis body { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
+        .lenis.lenis-stopped { overflow: hidden; }
+    </style>
+</head>
+<body class="bg-[#090D16] text-white min-h-screen flex flex-col font-sans antialiased selection:bg-sky-500 selection:text-white relative">
+
+    <!-- Ambient Dark Blue Canvas Glows -->
+    <div class="fixed top-0 left-1/4 w-[500px] h-[500px] bg-sky-600/10 blur-[140px] rounded-full pointer-events-none z-0"></div>
+    <div class="fixed bottom-0 right-10 w-[400px] h-[400px] bg-blue-700/10 blur-[130px] rounded-full pointer-events-none z-0"></div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 h-16 bg-[#050914]/90 backdrop-blur-md border-b border-sky-950/50 z-50 px-6 md:px-10 lg:px-16 flex items-center justify-between">
+    <!-- Left Section: Logo -->
+    <div class="flex items-center space-x-4">
+        <!-- Brand Logo -->
+        <a href="/" class="text-2xl font-bold tracking-wider text-white transition duration-300 hover:opacity-90 flex items-center space-x-1">
+            <span>Vizzio</span><span class="text-sky-400 drop-shadow-[0_0_12px_rgba(56,189,248,0.5)]">Stream</span>
+        </a>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="hidden lg:flex items-center space-x-4 xl:space-x-6 text-sm font-medium">
+        <!-- Home Link -->
+        <a href="/" class="text-sky-400 font-semibold transition duration-300">Home</a>
+
+        <!-- Genre Dropdown -->
+        <div class="relative group">
+            <button class="text-slate-300 group-hover:text-sky-400 py-2 transition duration-300 flex items-center space-x-1 focus:outline-none">
+                <span>Genre</span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <!-- Dropdown Menu -->
+            <div class="absolute left-0 top-full hidden group-hover:block group-focus-within:block w-48 bg-[#0F192E] border border-sky-950/80 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl">
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Action</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Sci-Fi & Fantasy</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Horror & Thriller</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Romance & Drama</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Komedi</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Petualangan</a>
+            </div>
+        </div>
+
+        <!-- Series Dropdown -->
+        <div class="relative group">
+            <button class="text-slate-300 group-hover:text-sky-400 py-2 transition duration-300 flex items-center space-x-1 focus:outline-none">
+                <span>Series</span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <!-- Dropdown Menu -->
+            <div class="absolute left-0 top-full hidden group-hover:block group-focus-within:block w-48 bg-[#0F192E] border border-sky-950/80 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl">
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">TV Series Barat</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Drama Korea (Drakor)</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Drama China</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Mini Series</a>
+            </div>
+        </div>
+
+        <!-- Populer Link -->
+        <a href="#" class="text-slate-300 hover:text-sky-400 transition duration-300">Populer</a>
+
+        <!-- Negara Dropdown -->
+        <div class="relative group">
+            <button class="text-slate-300 group-hover:text-sky-400 py-2 transition duration-300 flex items-center space-x-1 focus:outline-none">
+                <span>Negara</span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <!-- Dropdown Menu -->
+            <div class="absolute left-0 top-full hidden group-hover:block group-focus-within:block w-44 bg-[#0F192E] border border-sky-950/80 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl">
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Indonesia</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Amerika Serikat</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Korea Selatan</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Jepang</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">Thailand</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">China</a>
+            </div>
+        </div>
+
+        <!-- Tahun Dropdown -->
+        <div class="relative group">
+            <button class="text-slate-300 group-hover:text-sky-400 py-2 transition duration-300 flex items-center space-x-1 focus:outline-none">
+                <span>Tahun</span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <!-- Dropdown Menu -->
+            <div class="absolute left-0 top-full hidden group-hover:block group-focus-within:block w-36 bg-[#0F192E] border border-sky-950/80 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl">
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">2026</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">2025</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">2024</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">2023</a>
+                <a href="#" class="block px-4 py-2 text-xs md:text-sm text-slate-300 hover:bg-sky-500/10 hover:text-sky-400 transition">2022 & Sebelumnya</a>
+            </div>
+        </div>
+
+        <!-- Anime Link -->
+        <a href="http://127.0.0.1:8000/anime" class="text-slate-300 hover:text-sky-400 transition duration-300">Anime</a>
+
+        <!-- Favorit (Watchlist Ribbon Icon) -->
+        <a href="#" class="text-slate-300 hover:text-sky-400 transition duration-300 flex items-center space-x-1.5 group">
+            <svg class="w-4 h-4 text-sky-400 fill-current group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]" viewBox="0 0 24 24">
+                <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+            <span>Favorit</span>
+        </a>
+    </div>
+
+    <!-- Right Section: Search Bar & Account Action -->
+    <div class="flex items-center space-x-4">
+        <div class="relative hidden sm:block">
+            <form action="http://127.0.0.1:8000/search" method="GET" class="relative" role="search">
+                <input type="text" name="q" value="" placeholder="Cari film, anime..."
+                       class="bg-[#0B1220] border border-sky-950/70 text-xs text-white rounded-full py-2 pl-9 pr-4 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition duration-300 w-36 md:w-48 lg:w-56 placeholder-slate-500">
+                <button type="submit" aria-label="Cari" class="absolute left-3 top-2.5 text-slate-500 hover:text-sky-400 transition duration-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        
+                    <!-- Guest: Login + Register -->
+            <a href="/login" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-full transition duration-300 shadow-lg shadow-sky-500/25 active:scale-95 flex items-center justify-center">
+                Masuk
+            </a>
+            <a href="/register" class="hidden md:flex items-center space-x-2 text-sky-300 text-xs font-semibold px-4 py-2 rounded-full border border-sky-500/40 hover:bg-sky-500/10 transition duration-300 active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                <span>Daftar</span>
+            </a>
+            </div>
+</nav>
+
+    <!-- Layout Container -->
+    <div class="flex-1 pt-16 relative z-10 flex flex-col">
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col min-w-0">
+            <div class="flex-1">
+                <div class="min-h-screen bg-[#090D16] relative">
+    <!-- Ambient glow accents -->
+    <div class="fixed top-24 left-1/4 w-[400px] h-[400px] bg-sky-600/10 blur-[130px] rounded-full pointer-events-none z-0"></div>
+    <div class="fixed bottom-0 right-10 w-[350px] h-[350px] bg-blue-700/10 blur-[120px] rounded-full pointer-events-none z-0"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-6 md:px-10 py-10 space-y-10">
+
+                    
+            <div class="flex items-center gap-3 text-sm">
+                <a href="http://127.0.0.1:8000" class="inline-flex items-center gap-1.5 text-slate-400 hover:text-sky-300 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Kembali
+                </a>
+            </div>
+
+            
+            <section class="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
+                
+                <div class="relative shrink-0 mx-auto md:mx-0">
+                    <div class="w-56 md:w-72 aspect-[3/4] rounded-3xl overflow-hidden border border-sky-800/60 shadow-2xl shadow-sky-900/40 relative group">
+                                                    <img src="https://otakudesu.blog/wp-content/uploads/2026/07/157174.jpg" alt="Hyakkano Season 3"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                            </div>
+
+                                            <span class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg shadow-sky-500/30 border border-sky-400/50 uppercase tracking-wider">
+                            Ongoing
+                        </span>
+                                    </div>
+
+                
+                <div class="flex-1 min-w-0 space-y-6">
+                    <div class="space-y-3">
+                        <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white bg-gradient-to-r from-sky-400 via-sky-300 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
+                            Hyakkano Season 3
+                        </h1>
+                                                    <p class="text-slate-400 text-sm md:text-base">君のことが大大大大大好きな100人の彼女 3期</p>
+                        
+                        
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                                                            <span class="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider bg-sky-500/10 border border-sky-500/40 text-sky-300 px-3 py-1 rounded-lg">TV</span>
+                                                                                        <span class="inline-flex items-center gap-1 text-sm font-bold bg-[#0F192E] border border-slate-700/60 text-amber-400 px-3 py-1 rounded-lg">
+                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg>
+                                    8.26
+                                </span>
+                                                                                </div>
+                    </div>
+
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                    <div class="bg-[#0F192E] border border-sky-950/60 rounded-xl p-3">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Status</p>
+                                <p class="text-sm font-bold text-white mt-1">Ongoing</p>
+                            </div>
+                                                                            <div class="bg-[#0F192E] border border-sky-950/60 rounded-xl p-3">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Tayang</p>
+                                <p class="text-sm font-bold text-white mt-1">Jul 05, 2026</p>
+                            </div>
+                                                                            <div class="bg-[#0F192E] border border-sky-950/60 rounded-xl p-3">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Studio</p>
+                                <p class="text-sm font-bold text-white mt-1">Bibury Animation Studios</p>
+                            </div>
+                                                                            <div class="bg-[#0F192E] border border-sky-950/60 rounded-xl p-3">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Durasi</p>
+                                <p class="text-sm font-bold text-white mt-1">23 min. per ep.</p>
+                            </div>
+                                                                            <div class="bg-[#0F192E] border border-sky-950/60 rounded-xl p-3 col-span-2 sm:col-span-1">
+                                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Produser</p>
+                                <p class="text-sm font-bold text-white mt-1 line-clamp-2">Lantis, Movic, Bushiroad, Tokyo MX, Shueisha, Bandai Namco Music Live</p>
+                            </div>
+                                            </div>
+
+                    
+                                            <div class="flex flex-wrap gap-2">
+                                                            <span class="text-xs font-semibold bg-slate-800/60 border border-slate-700/60 text-slate-300 px-3 py-1 rounded-full hover:border-sky-500 hover:text-sky-300 transition-colors">Comedy</span>
+                                                            <span class="text-xs font-semibold bg-slate-800/60 border border-slate-700/60 text-slate-300 px-3 py-1 rounded-full hover:border-sky-500 hover:text-sky-300 transition-colors">Harem</span>
+                                                            <span class="text-xs font-semibold bg-slate-800/60 border border-slate-700/60 text-slate-300 px-3 py-1 rounded-full hover:border-sky-500 hover:text-sky-300 transition-colors">Parody</span>
+                                                            <span class="text-xs font-semibold bg-slate-800/60 border border-slate-700/60 text-slate-300 px-3 py-1 rounded-full hover:border-sky-500 hover:text-sky-300 transition-colors">Romance</span>
+                                                            <span class="text-xs font-semibold bg-slate-800/60 border border-slate-700/60 text-slate-300 px-3 py-1 rounded-full hover:border-sky-500 hover:text-sky-300 transition-colors">School</span>
+                                                    </div>
+                                    </div>
+            </section>
+
+            
+            
+            
+                <section id="episodes" class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                            <span class="w-1.5 h-10 bg-gradient-to-b from-sky-400 to-blue-600 rounded-full"></span>
+                            Daftar Episode
+                            <span class="text-sm font-bold text-sky-400 bg-sky-500/10 border border-sky-500/30 px-3 py-1 rounded-full">5</span>
+                        </h2>
+                        <span class="hidden sm:inline-flex items-center gap-2 text-xs text-slate-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.55-2.27A1 1 0 0121 8.63v6.74a1 1 0 01-1.45.9L15 14M5 17h10a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            Klik episode untuk menonton
+                        </span>
+                    </div>
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                                            <a href="http://127.0.0.1:8000/anime/hyakkano-s3-sub-ind/episode/hykno-s3-episode-5-sub-indo"
+                                   class="group relative flex items-center gap-4 bg-gradient-to-br from-[#0F192E] to-[#0B1424] border border-sky-950/60 hover:border-sky-400/60 rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/10">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-br from-sky-500/0 via-sky-500/0 to-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                                    
+                                    <div class="relative w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:shadow-sky-500/40 group-hover:scale-105 transition-all duration-300">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+
+                                    <div class="relative min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                                            Episode
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                            Putar sekarang
+                                        </p>
+                                    </div>
+
+                                    <svg class="relative w-5 h-5 text-slate-600 group-hover:text-sky-400 shrink-0 transition-all duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                                            <a href="http://127.0.0.1:8000/anime/hyakkano-s3-sub-ind/episode/hykno-s3-episode-4-sub-indo"
+                                   class="group relative flex items-center gap-4 bg-gradient-to-br from-[#0F192E] to-[#0B1424] border border-sky-950/60 hover:border-sky-400/60 rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/10">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-br from-sky-500/0 via-sky-500/0 to-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                                    
+                                    <div class="relative w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:shadow-sky-500/40 group-hover:scale-105 transition-all duration-300">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+
+                                    <div class="relative min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                                            Episode
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                            Putar sekarang
+                                        </p>
+                                    </div>
+
+                                    <svg class="relative w-5 h-5 text-slate-600 group-hover:text-sky-400 shrink-0 transition-all duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                                            <a href="http://127.0.0.1:8000/anime/hyakkano-s3-sub-ind/episode/hykno-s3-episode-3-sub-indo"
+                                   class="group relative flex items-center gap-4 bg-gradient-to-br from-[#0F192E] to-[#0B1424] border border-sky-950/60 hover:border-sky-400/60 rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/10">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-br from-sky-500/0 via-sky-500/0 to-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                                    
+                                    <div class="relative w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:shadow-sky-500/40 group-hover:scale-105 transition-all duration-300">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+
+                                    <div class="relative min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                                            Episode
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                            Putar sekarang
+                                        </p>
+                                    </div>
+
+                                    <svg class="relative w-5 h-5 text-slate-600 group-hover:text-sky-400 shrink-0 transition-all duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                                            <a href="http://127.0.0.1:8000/anime/hyakkano-s3-sub-ind/episode/hykno-s3-episode-2-sub-indo"
+                                   class="group relative flex items-center gap-4 bg-gradient-to-br from-[#0F192E] to-[#0B1424] border border-sky-950/60 hover:border-sky-400/60 rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/10">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-br from-sky-500/0 via-sky-500/0 to-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                                    
+                                    <div class="relative w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:shadow-sky-500/40 group-hover:scale-105 transition-all duration-300">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+
+                                    <div class="relative min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                                            Episode
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                            Putar sekarang
+                                        </p>
+                                    </div>
+
+                                    <svg class="relative w-5 h-5 text-slate-600 group-hover:text-sky-400 shrink-0 transition-all duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                                            <a href="http://127.0.0.1:8000/anime/hyakkano-s3-sub-ind/episode/hykno-s3-episode-1-sub-indo"
+                                   class="group relative flex items-center gap-4 bg-gradient-to-br from-[#0F192E] to-[#0B1424] border border-sky-950/60 hover:border-sky-400/60 rounded-2xl p-4 overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/10">
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-br from-sky-500/0 via-sky-500/0 to-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+                                    
+                                    <div class="relative w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:shadow-sky-500/40 group-hover:scale-105 transition-all duration-300">
+                                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+
+                                    <div class="relative min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                                            Episode
+                                        </p>
+                                        <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                            Putar sekarang
+                                        </p>
+                                    </div>
+
+                                    <svg class="relative w-5 h-5 text-slate-600 group-hover:text-sky-400 shrink-0 transition-all duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                                                    </div>
+                                    </section>
+            </div>
+</div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="bg-[#050914] border-t border-sky-950/50 py-6 mt-auto relative z-10">
+    <div class="px-6 md:px-10 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Copyright Text -->
+        <p class="text-slate-400 text-sm text-center md:text-left">
+            © 2026 VizzioStream. All rights reserved.
+        </p>
+
+        <!-- Footer Navigation Links -->
+        <div class="flex items-center space-x-6 text-sm text-slate-400">
+            <a href="#" class="hover:text-[#38BDF8] transition duration-300">Privacy Policy</a>
+            <a href="#" class="hover:text-[#38BDF8] transition duration-300">Terms</a>
+            <a href="#" class="hover:text-[#38BDF8] transition duration-300">Contact</a>
+        </div>
+    </div>
+</footer>
+        </main>
+    </div>
+
+    
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lenis = new Lenis({
+                duration: 1.1,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true,
+                wheelMultiplier: 1,
+                touchMultiplier: 1.5,
+            });
+
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+
+            // Sync with anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', (e) => {
+                    const target = document.querySelector(anchor.getAttribute('href'));
+                    if (target) {
+                        e.preventDefault();
+                        lenis.scrollTo(target, { offset: -80, duration: 1.2 });
+                    }
+                });
+            });
+
+            window.lenis = lenis;
+        });
+    </script>
+</body>
+</html>
