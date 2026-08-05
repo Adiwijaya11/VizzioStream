@@ -1,31 +1,24 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "public/index.php",
-            "use": "vercel-php@0.7.3",
-            "config": {
-                "includeFiles": [
-                    "bootstrap/**",
-                    "config/**",
-                    "routes/**",
-                    "resources/**",
-                    "storage/**",
-                    "app/**",
-                    "database/**",
-                    "vendor/**",
-                    "public/build/**",
-                    "artisan",
-                    "composer.json",
-                    "composer.lock"
-                ]
-            }
-        },
-        {
-            "src": "public/debug.php",
-            "use": "vercel-php@0.7.3"
+    "functions": {
+        "public/index.php": {
+            "runtime": "vercel-php@0.7.3",
+            "includeFiles": [
+                "app/**",
+                "bootstrap/**",
+                "config/**",
+                "database/**",
+                "public/**",
+                "resources/**",
+                "routes/**",
+                "storage/**",
+                "vendor/**",
+                "artisan",
+                "composer.json",
+                "composer.lock"
+            ]
         }
-    ],
+    },
     "routes": [
         {
             "handle": "filesystem"
