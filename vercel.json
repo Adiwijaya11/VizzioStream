@@ -19,9 +19,17 @@
                     "composer.lock"
                 ]
             }
+        },
+        {
+            "src": "public/debug.php",
+            "use": "vercel-php@0.7.3"
         }
     ],
     "routes": [
+        {
+            "src": "/debug.php",
+            "dest": "public/debug.php"
+        },
         {
             "src": "/(.*)",
             "dest": "public/index.php"
