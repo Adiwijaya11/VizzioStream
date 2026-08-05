@@ -9,6 +9,16 @@ Route::get('/search', [WelcomeController::class, 'search'])->name('search');
 Route::get('/api/search/suggestions', [WelcomeController::class, 'searchSuggestions'])->name('api.search.suggestions');
 Route::get('/genres', [AnimeController::class, 'genres'])->name('genre.index');
 
+Route::get('/test-vercel', function () {
+    return response()->json([
+        'status' => 'ok',
+        'laravel' => app()->version(),
+        'php' => PHP_VERSION,
+        'app_env' => env('APP_ENV'),
+        'app_debug' => env('APP_DEBUG'),
+    ]);
+});
+
 // Public anime browsing (wajik-anime-api local server)
 Route::get('/anime', [AnimeController::class, 'index'])->name('anime.index');
 Route::get('/anime/type/{type}', [AnimeController::class, 'feed'])->name('anime.feed');
