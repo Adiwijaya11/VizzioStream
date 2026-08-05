@@ -28,8 +28,7 @@
     ],
     "routes": [
         {
-            "src": "/debug.php",
-            "dest": "public/debug.php"
+            "handle": "filesystem"
         },
         {
             "src": "/(.*)",
