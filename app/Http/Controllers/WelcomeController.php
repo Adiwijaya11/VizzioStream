@@ -57,6 +57,8 @@ class WelcomeController extends Controller
             $sectionTotal = 0;
         }
 
+        $isFavorited = $featured && isset(session('favorites', [])[$featured->slug]);
+
         return view('welcome', [
             'items' => $items,
             'featured' => $featured,
@@ -64,6 +66,7 @@ class WelcomeController extends Controller
             'sectionItems' => $sectionItems,
             'sectionPagination' => $sectionPagination,
             'sectionTotal' => $sectionTotal,
+            'isFavorited' => $isFavorited,
         ]);
     }
 

@@ -175,12 +175,17 @@
                         </svg>
                         <span>Putar Sekarang</span>
                     </a>
-                    <a href="#" class="bg-slate-900/80 hover:bg-slate-800 border border-sky-900/60 hover:border-sky-400 text-white px-6 py-3 md:py-3.5 rounded-xl font-semibold backdrop-blur-md transition-all duration-300 hover:scale-105 flex items-center space-x-2 grow sm:grow-0 justify-center">
-                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        <span>Daftar Saya</span>
-                    </a>
+                    <form method="POST" action="{{ $featured->slug ? route('anime.favorite', ['animeId' => $featured->slug]) : '#' }}" class="grow sm:grow-0">
+                        @csrf
+                        <input type="hidden" name="title" value="{{ $featured->title ?? 'Anime' }}">
+                        <input type="hidden" name="poster" value="{{ $featured->poster ?? '' }}">
+                        <button type="submit" id="hero-favorite-button" class="w-full sm:w-auto bg-slate-900/80 hover:bg-slate-800 border border-sky-900/60 hover:border-sky-400 text-white px-6 py-3 md:py-3.5 rounded-xl font-semibold backdrop-blur-md transition-all duration-300 hover:scale-105 flex items-center space-x-2 grow sm:grow-0 justify-center {{ ($isFavorited ?? false) ? '!border-rose-500/60 !text-rose-300 !bg-rose-500/10' : '' }}">
+                            <svg id="hero-favorite-icon" class="w-5 h-5 {{ ($isFavorited ?? false) ? 'text-rose-400' : 'text-sky-400' }}" fill="{{ ($isFavorited ?? false) ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span>{{ ($isFavorited ?? false) ? 'Di Daftar Saya' : 'Daftar Saya' }}</span>
+                        </button>
+                    </form>
                 </div>
             </div>
             <!-- Sharp Poster Panel (responsive: compact on mobile, crisp on the right on desktop) -->
