@@ -25,22 +25,23 @@ class AnimeApiService
     {
         $url = $this->apiBaseUrl . '/' . ltrim($endpoint, '/');
         $cacheKey = 'anime_api_' . md5($url . json_encode($params));
-        $cacheTtl = $cacheTtl ?? config('anime.cache_ttl', 600);
+        $cacheTtl = $cacheTtl ?? (int) config('anime.cache_ttl', 900);
 
-        if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached) && empty($cached['_failed'])) {
+            return $cached;
         }
 
         try {
-            $response = Http::timeout(config('anime.timeout', 30))
-                ->retry(2, 200)
+            $response = Http::timeout((int) config('anime.timeout', 10))
+                ->connectTimeout(5)
+                ->retry(1, 150)
                 ->get($url, $params);
 
             $response->throw();
 
             $json = $response->json() ?? [];
             Cache::put($cacheKey, $json, $cacheTtl);
-            Log::info("Anime API call successful: $endpoint", ['params' => $params]);
 
             return $json;
         } catch (Throwable $e) {
@@ -49,7 +50,11 @@ class AnimeApiService
                 'error' => $e->getMessage(),
             ]);
 
-            return ['data' => null, 'pagination' => null];
+            $empty = ['data' => null, 'pagination' => null, '_failed' => true];
+            // Brief negative cache only — don't lock out the endpoint for 15 min.
+            Cache::put($cacheKey, $empty, 30);
+
+            return $empty;
         }
     }
 
@@ -209,57 +214,49 @@ class AnimeApiService
     }
 
     /**
-     * Best catalog card for the hero: the card matching the single most recent
-     * release on the home feed, so the hero shows real episode/update data
-     * with a working detail link.
+     * Best catalog card for the hero: match the most recent home release so
+     * the banner shows real episode/update data with a working detail link.
      *
      * @param  array<int, array<string, mixed>>  $cards
      * @return array<string, mixed>|null
      */
     public function heroCard(array $cards): ?array
     {
+        // Reuses request() cache — no extra HTTP if posterCatalog already ran.
         $home = $this->request('oploverz/home');
         $latest = $home['data']['latestRelease']['animeList'][0] ?? null;
         if (! $latest) {
-            return null;
+            return $cards[0] ?? null;
         }
 
-        // Find the catalog card for this series so the hero link works.
-        $card = null;
-        foreach (['seriesName', 'title'] as $field) {
-            $candidate = $latest[$field] ?? null;
-            if (! is_string($candidate) || trim($candidate) === '') {
-                continue;
-            }
-            // seriesName often holds "<Name>\t<Episode Title>"
-            $key = $this->normalizeKey(trim(explode("\t", $candidate)[0]));
-            if ($key === '') {
-                continue;
-            }
+        $base = $this->mapAnime($latest);
+        if (is_string($latest['href'] ?? null)) {
+            $base['animeId'] = $this->episodeSlugToAnimeSlug(
+                basename(rtrim(parse_url($latest['href'], PHP_URL_PATH) ?: $latest['href'], '/'))
+            ) ?: $base['animeId'];
+        }
+
+        // Prefer a catalog card with a real series slug when titles match.
+        $key = $this->normalizeKey(trim(explode("\t", (string) ($latest['seriesName'] ?? $latest['title'] ?? ''))[0]));
+        if ($key !== '') {
             foreach ($cards as $c) {
                 if ($this->normalizeKey($c['title'] ?? '') === $key) {
-                    $card = $c;
-                    break 2;
+                    $base = array_merge($base, [
+                        'animeId' => $c['animeId'] ?: $base['animeId'],
+                        'poster' => $c['poster'] ?? $base['poster'],
+                        'title' => $c['title'] ?? $base['title'],
+                    ]);
+                    break;
                 }
             }
         }
 
-        // Base card: matched catalog card (keeps animeId for the detail link),
-        // or the raw home item mapped directly (title/poster/episode all real).
-        $base = $card ?? $this->mapAnime($latest);
-        if ($card === null && is_string($latest['href'] ?? null)) {
-            // Best-effort detail slug from the episode URL.
-            $base['animeId'] = $this->episodeSlugToAnimeSlug($latest['href']);
-        }
-
-        // Overwrite with the real release data from the home feed.
         $episodes = (int) preg_replace('/\D/', '', $latest['episode'] ?? '');
-        $status = $latest['status'] ?? $base['status'] ?? null;
 
         return array_merge($base, [
             'episodes' => $episodes ?: ($base['episodes'] ?? 0),
             'episodeLabel' => $latest['episode'] ?? $base['episodeLabel'] ?? null,
-            'status' => $status,
+            'status' => $latest['status'] ?? $base['status'] ?? null,
             'score' => $latest['score'] ?? $base['score'] ?? 'N/A',
             'releaseDay' => $latest['releaseTime'] ?? $base['releaseDay'] ?? null,
             'genres' => $latest['genres'] ?? $base['genres'] ?? [],
@@ -270,40 +267,79 @@ class AnimeApiService
 
     /**
      * Fetch pages 1..N of ongoing + completed (poster cards) and the home
-     * popular list. The API list endpoint only exposes title/poster/type/
-     * status/slug, so the home feed enriches cards with episode + score.
+     * popular list. Concurrent pool + catalog-level cache so home isn't 80
+     * sequential upstream round-trips on every cold request.
      */
     private function posterCatalog(): array
     {
-        $merged = [];
+        $pages = max(1, (int) config('anime.catalog_pages', 3));
+        $ttl = (int) config('anime.cache_ttl', 900);
+        $cacheKey = 'anime_poster_catalog_v2_p' . $pages;
 
-        $home = $this->request('oploverz/home');
-        foreach ($home['data']['popularToday']['animeList'] ?? [] as $item) {
-            $card = $this->mapAnime($item);
-            if ($card['animeId'] !== '') {
-                $merged[$card['animeId']] = $card;
+        return Cache::remember($cacheKey, $ttl, function () use ($pages) {
+            $home = $this->request('oploverz/home');
+            $merged = [];
+
+            foreach ($home['data']['popularToday']['animeList'] ?? [] as $item) {
+                $card = $this->mapAnime($item);
+                if ($card['animeId'] !== '') {
+                    $merged[$card['animeId']] = $card;
+                }
             }
-        }
 
-        foreach (['ongoing', 'completed'] as $status) {
-            for ($p = 1; $p <= (int) config('anime.catalog_pages', 8); $p++) {
-                $feed = $this->request('oploverz/anime', ['status' => $status, 'page' => $p]);
-                $list = $feed['data']['animeList'] ?? [];
-                foreach ($list as $item) {
-                    $card = $this->mapAnime($item);
-                    if ($card['animeId'] !== '') {
-                        $merged[$card['animeId']] = $card;
+            // Build all page URLs first, then fire them in one concurrent pool.
+            $jobs = [];
+            foreach (['ongoing', 'completed'] as $status) {
+                for ($p = 1; $p <= $pages; $p++) {
+                    $jobs[] = ['status' => $status, 'page' => $p];
+                }
+            }
+
+            $base = $this->apiBaseUrl;
+            $timeout = (int) config('anime.timeout', 10);
+
+            $responses = Http::pool(function ($pool) use ($jobs, $base, $timeout) {
+                foreach ($jobs as $i => $job) {
+                    $pool->as((string) $i)
+                        ->timeout($timeout)
+                        ->connectTimeout(5)
+                        ->get($base . '/oploverz/anime', [
+                            'status' => $job['status'],
+                            'page' => $job['page'],
+                        ]);
+                }
+            });
+
+            foreach ($responses as $i => $response) {
+                try {
+                    if (! $response || ! method_exists($response, 'successful') || ! $response->successful()) {
+                        continue;
                     }
-                }
-                if (count($list) === 0) {
-                    break; // last page reached (oploverz pages hold ~7-10 items)
+                    $json = $response->json() ?? [];
+                    // Seed per-page cache so ongoing()/complete() reuse the same data.
+                    $job = $jobs[(int) $i];
+                    $pageUrl = $base . '/oploverz/anime';
+                    $pageKey = 'anime_api_' . md5($pageUrl . json_encode([
+                        'status' => $job['status'],
+                        'page' => $job['page'],
+                    ]));
+                    Cache::put($pageKey, $json, (int) config('anime.cache_ttl', 900));
+
+                    foreach ($json['data']['animeList'] ?? [] as $item) {
+                        $card = $this->mapAnime($item);
+                        if ($card['animeId'] !== '') {
+                            $merged[$card['animeId']] = $card;
+                        }
+                    }
+                } catch (Throwable $e) {
+                    // Skip bad page; keep whatever we already have.
                 }
             }
-        }
 
-        $enriched = array_map(fn ($card) => $this->mapHomeEnrich($card, $home), $merged);
+            $enriched = array_map(fn ($card) => $this->mapHomeEnrich($card, $home), $merged);
 
-        return array_values($enriched);
+            return array_values($enriched);
+        });
     }
 
     /**

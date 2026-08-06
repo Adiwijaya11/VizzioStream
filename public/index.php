@@ -1,8 +1,6 @@
 <?php
 
-// Mengaktifkan debug secara paksa untuk debugging di Vercel. Hapus ini setelah masalah teratasi.
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
+
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;

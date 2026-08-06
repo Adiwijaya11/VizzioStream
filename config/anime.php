@@ -13,10 +13,15 @@ return [
     'provider' => env('ANIME_PROVIDER', 'oploverz'),
 
     /* Section per-page items */
+    'per_page' => (int) env('ANIME_API_PER_PAGE', 30),
 
-    'per_page' => env('ANIME_API_PER_PAGE', 30),
+    /* API pages per status for home catalog (each page ~8–10 titles).
+       Keep small: every cold request multiplies into N×2 outbound HTTP calls. */
+    'catalog_pages' => (int) env('ANIME_CATALOG_PAGES', 3),
 
-    /* Number of API pages to fetch per status for the poster catalog */
+    /* Seconds to keep raw API + derived catalog in cache */
+    'cache_ttl' => (int) env('ANIME_CACHE_TTL', 900),
 
-    'catalog_pages' => env('ANIME_CATALOG_PAGES', 40),
+    /* Upstream HTTP timeout (seconds). Fail fast on Vercel cold starts. */
+    'timeout' => (int) env('ANIME_API_TIMEOUT', 10),
 ];

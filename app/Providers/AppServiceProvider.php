@@ -37,86 +37,55 @@ class AppServiceProvider extends ServiceProvider
             $genresData = [];
             $ongoingData = [];
             $completedData = [];
-            $yearsData = [];
-            $countriesData = [];
+
+            // Years + countries are pure static — zero HTTP on every page.
+            $yearsData = Cache::remember('navbar_years_static', now()->addDay(), function () {
+                $years = [];
+                for ($y = (int) date('Y'); $y >= 2015; $y--) {
+                    $years[] = ['title' => (string) $y, 'slug' => (string) $y];
+                }
+
+                return $years;
+            });
+
+            $countriesData = Cache::remember('navbar_countries_static', now()->addDay(), function () use ($animeService) {
+                return collect(['JP', 'US', 'CN', 'KR', 'GB', 'AU', 'TW', 'TH', 'VN', 'ID'])
+                    ->map(fn ($code) => [
+                        'title' => $animeService->countryName($code),
+                        'slug' => $code,
+                    ])
+                    ->toArray();
+            });
 
             try {
-                $genresData = Cache::remember('navbar_genres', now()->addMinutes(30), function () use ($animeService) {
-                    $response = $animeService->getAllGenres();
-                    return collect($response ?? [])->map(function ($genre) {
-                        return [
-                            'title' => $genre['title'],
-                            'slug' => $genre['genreId'],
-                        ];
-                    })->toArray();
+                // Genres + series previews share the already-cached home/list endpoints.
+                $genresData = Cache::remember('navbar_genres', now()->addMinutes(60), function () use ($animeService) {
+                    return collect($animeService->getAllGenres() ?? [])->map(fn ($genre) => [
+                        'title' => $genre['title'],
+                        'slug' => $genre['genreId'],
+                    ])->toArray();
                 });
 
                 $ongoingData = Cache::remember('navbar_ongoing', now()->addMinutes(30), function () use ($animeService) {
-                    $response = $animeService->ongoing(1);
-                    return collect($response['items'] ?? [])->map(function ($anime) {
-                        return [
+                    return collect($animeService->ongoing(1)['items'] ?? [])
+                        ->take(3)
+                        ->map(fn ($anime) => [
                             'title' => $anime['title'],
                             'slug' => $anime['animeId'],
-                        ];
-                    })->take(5)->toArray();
-                });
-
-                $completedData = Cache::remember('navbar_completed', now()->addMinutes(30), function () use ($animeService) {
-                    $response = $animeService->complete(1);
-                    return collect($response['items'] ?? [])->map(function ($anime) {
-                        return [
-                            'title' => $anime['title'],
-                            'slug' => $anime['animeId'],
-                        ];
-                    })->take(5)->toArray();
-                });
-
-                // Real year data derived from kuramanime season properties
-                // (e.g. "Summer 2026" => 2026), sorted descending.
-                $yearsData = Cache::remember('navbar_years', now()->addMinutes(60), function () use ($animeService) {
-                    $seasons = $animeService->getProperties('season');
-
-                    return collect($seasons ?? [])
-                        ->map(function ($season) {
-                            $year = (int) preg_replace('/\D+/', '', $season['title'] ?? '');
-
-                            return $year > 0 ? $year : null;
-                        })
-                        ->filter()
-                        ->unique()
-                        ->sortDesc()
-                        ->values()
-                        ->map(fn ($year) => ['title' => (string) $year, 'slug' => (string) $year])
+                        ])
                         ->toArray();
                 });
 
-                // Real country data from kuramanime country properties (JP).
-                $countriesData = Cache::remember('navbar_countries', now()->addMinutes(60), function () use ($animeService) {
-                    $countries = $animeService->getProperties('country');
-                    $countryNames = [
-                        'JP' => 'Jepang',
-                        'AU' => 'Australia',
-                        'CN' => 'China',
-                        'ID' => 'Indonesia',
-                        'KR' => 'Korea Selatan',
-                        'US' => 'Amerika Serikat',
-                        'GB' => 'Inggris',
-                        'TW' => 'Taiwan',
-                        'TH' => 'Thailand',
-                        'VN' => 'Vietnam',
-                    ];
-
-                    return collect($countries ?? [])->map(function ($country) use ($countryNames) {
-                        $title = $country['title'] ?? '';
-
-                        return [
-                            'title' => $countryNames[$title] ?? $title,
-                            'slug'  => $country['propertyId'] ?? $title,
-                        ];
-                    })->toArray();
+                $completedData = Cache::remember('navbar_completed', now()->addMinutes(30), function () use ($animeService) {
+                    return collect($animeService->complete(1)['items'] ?? [])
+                        ->take(3)
+                        ->map(fn ($anime) => [
+                            'title' => $anime['title'],
+                            'slug' => $anime['animeId'],
+                        ])
+                        ->toArray();
                 });
             } catch (Throwable $e) {
-                // Log the error or handle it as needed
                 report($e);
             }
 

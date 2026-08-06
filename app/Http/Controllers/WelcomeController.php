@@ -32,11 +32,8 @@ class WelcomeController extends Controller
         $page = max(1, (int) $request->query('page', 1));
 
         try {
-            // Featured banner: always the very latest ongoing release (API page 1).
-            $data = $this->anime->ongoing(1);
-            $items = array_slice($data['items'] ?? [], 0, 12);
-
-            // Anime list section: 30 items per page, merged across ongoing + completed.
+            // One catalog load covers list + hero (cached). Avoid a second
+            // ongoing() round-trip that doubles cold-start latency.
             $section = $this->anime->merged(
                 $page,
                 (int) config('anime.per_page', 30)
@@ -45,10 +42,11 @@ class WelcomeController extends Controller
             $sectionPagination = $section['pagination'] ?? $this->buildFallbackPagination($page);
             $sectionTotal = (int) ($section['totalItems'] ?? 0);
 
-            // Featured banner: catalog card matching the single most recent
-            // home-feed release, so hero shows real episode/update data.
+            // Top strip reuses the same page of cards (already enriched).
+            $items = array_slice($sectionItems, 0, 12);
+
             $featured = $this->buildFeatured(
-                $this->anime->heroCard($sectionItems) ?? $sectionItems[0] ?? null
+                $this->anime->heroCard($sectionItems) ?? ($sectionItems[0] ?? null)
             );
         } catch (Throwable $e) {
             Log::error("Failed to fetch anime data in WelcomeController@index: {$e->getMessage()}");
