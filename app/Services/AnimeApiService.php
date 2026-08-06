@@ -266,17 +266,19 @@ class AnimeApiService
     }
 
     /**
-     * Fetch pages 1..N of ongoing + completed (poster cards) and the home
-     * popular list. Concurrent pool + catalog-level cache so home isn't 80
-     * sequential upstream round-trips on every cold request.
+     * Fetch the full poster catalog (ongoing + completed + home popular,
+     * deduped by animeId) with a dynamic page probe. The oploverz API has
+     * no pagination meta and no batch endpoint, so pages are fetched in
+     * concurrent chunks of 10 and a status stops as soon as a page returns
+     * fewer than 10 items (its last page). Catalog-level cache keeps cold
+     * starts to one burst of requests.
      */
     private function posterCatalog(): array
     {
-        $pages = max(1, (int) config('anime.catalog_pages', 3));
         $ttl = (int) config('anime.cache_ttl', 900);
-        $cacheKey = 'anime_poster_catalog_v2_p' . $pages;
+        $cacheKey = 'anime_poster_catalog_v3';
 
-        return Cache::remember($cacheKey, $ttl, function () use ($pages) {
+        return Cache::remember($cacheKey, $ttl, function () {
             $home = $this->request('oploverz/home');
             $merged = [];
 
@@ -287,52 +289,71 @@ class AnimeApiService
                 }
             }
 
-            // Build all page URLs first, then fire them in one concurrent pool.
-            $jobs = [];
-            foreach (['ongoing', 'completed'] as $status) {
-                for ($p = 1; $p <= $pages; $p++) {
-                    $jobs[] = ['status' => $status, 'page' => $p];
-                }
-            }
-
             $base = $this->apiBaseUrl;
             $timeout = (int) config('anime.timeout', 10);
+            $chunkSize = 10; // concurrent requests per round
+            // config value is only the initial ceiling; the probe stops early
+            // on the first short page, so a high cap costs nothing extra.
+            $maxPages = max((int) config('anime.catalog_pages', 3), 60);
+            $finished = ['ongoing' => false, 'completed' => false];
 
-            $responses = Http::pool(function ($pool) use ($jobs, $base, $timeout) {
-                foreach ($jobs as $i => $job) {
-                    $pool->as((string) $i)
-                        ->timeout($timeout)
-                        ->connectTimeout(5)
-                        ->get($base . '/oploverz/anime', [
-                            'status' => $job['status'],
-                            'page' => $job['page'],
-                        ]);
-                }
-            });
-
-            foreach ($responses as $i => $response) {
-                try {
-                    if (! $response || ! method_exists($response, 'successful') || ! $response->successful()) {
+            for ($from = 1; $from <= $maxPages && ! ($finished['ongoing'] && $finished['completed']); $from += $chunkSize) {
+                $to = min($from + $chunkSize - 1, $maxPages);
+                $jobs = [];
+                foreach (['ongoing', 'completed'] as $status) {
+                    if ($finished[$status]) {
                         continue;
                     }
-                    $json = $response->json() ?? [];
-                    // Seed per-page cache so ongoing()/complete() reuse the same data.
-                    $job = $jobs[(int) $i];
-                    $pageUrl = $base . '/oploverz/anime';
-                    $pageKey = 'anime_api_' . md5($pageUrl . json_encode([
-                        'status' => $job['status'],
-                        'page' => $job['page'],
-                    ]));
-                    Cache::put($pageKey, $json, (int) config('anime.cache_ttl', 900));
-
-                    foreach ($json['data']['animeList'] ?? [] as $item) {
-                        $card = $this->mapAnime($item);
-                        if ($card['animeId'] !== '') {
-                            $merged[$card['animeId']] = $card;
-                        }
+                    for ($p = $from; $p <= $to; $p++) {
+                        $jobs[] = ['status' => $status, 'page' => $p];
                     }
-                } catch (Throwable $e) {
-                    // Skip bad page; keep whatever we already have.
+                }
+                if (empty($jobs)) {
+                    break;
+                }
+
+                $responses = Http::pool(function ($pool) use ($jobs, $base, $timeout) {
+                    foreach ($jobs as $i => $job) {
+                        $pool->as((string) $i)
+                            ->timeout($timeout)
+                            ->connectTimeout(5)
+                            ->get($base . '/oploverz/anime', [
+                                'status' => $job['status'],
+                                'page' => $job['page'],
+                            ]);
+                    }
+                });
+
+                foreach ($responses as $i => $response) {
+                    try {
+                        if (! $response || ! method_exists($response, 'successful') || ! $response->successful()) {
+                            continue;
+                        }
+                        $json = $response->json() ?? [];
+                        $job = $jobs[(int) $i];
+
+                        // Seed per-page cache so ongoing()/complete() reuse the same data.
+                        $pageKey = 'anime_api_' . md5($base . '/oploverz/anime' . json_encode([
+                            'status' => $job['status'],
+                            'page' => $job['page'],
+                        ]));
+                        Cache::put($pageKey, $json, (int) config('anime.cache_ttl', 900));
+
+                        $items = $json['data']['animeList'] ?? [];
+                        foreach ($items as $item) {
+                            $card = $this->mapAnime($item);
+                            if ($card['animeId'] !== '') {
+                                $merged[$card['animeId']] = $card;
+                            }
+                        }
+
+                        // A short page means this status has no more pages.
+                        if (count($items) < 10) {
+                            $finished[$job['status']] = true;
+                        }
+                    } catch (Throwable $e) {
+                        // Skip bad page; keep whatever we already have.
+                    }
                 }
             }
 
